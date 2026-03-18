@@ -17,6 +17,10 @@ $.fn.selectpicker.Constructor.BootstrapVersion = '4';
 Options can be passed via data attributes or JavaScript. For data attributes, append the option name to `data-`, as in 
 `data-style=""` or `data-selected-text-format="count"`.
 
+<span class="alert alert-warning d-block" role="alert">
+  <strong>Note:</strong> For security reasons, the <code>sanitize</code>, <code>sanitizeFn</code> and <code>whiteList</code> options cannot be supplied using data attributes.
+</span>
+
 <table class="table table-bordered table-striped">
   <thead>
   <tr>
@@ -129,10 +133,10 @@ Options can be passed via data attributes or JavaScript. For data attributes, ap
   </tr>
   <tr>
     <td>liveSearchStyle</td>
-    <td>string</td>
+    <td>string | function</td>
     <td><code>'contains'</code></td>
     <td>
-      <p>When set to <code>'contains'</code>, searching will reveal options that contain the searched text. For example, searching for pl with return both Ap<b>pl</b>e, <b>Pl</b>um, and <b>Pl</b>antain. When set to <code>'startsWith'</code>, searching for pl will return only <b>Pl</b>um and <b>Pl</b>antain.</p>
+      <p>When set to <code>'contains'</code>, searching will reveal options that contain the searched text. For example, searching for pl with return both Ap<b>pl</b>e, <b>Pl</b>um, and <b>Pl</b>antain. When set to <code>'startsWith'</code>, searching for pl will return only <b>Pl</b>um and <b>Pl</b>antain. If a function is used, the arguments are the option string and the searched text and it must return <code>true</code> if the option matches or <code>false<code>.</p>
     </td>
   </tr>
   <tr>
@@ -199,7 +203,15 @@ Options can be passed via data attributes or JavaScript. For data attributes, ap
     <td><code>'values'</code></td>
     <td>
       <p>Specifies how the selection is displayed with a multiple select.</p>
-      <p><code>'values'</code> displays a list of the selected options (separated by <code>multipleSeparator</code>. <code>'static'</code> simply displays the select element's title. <code>'count'</code> displays the total number of selected options. <code>'count > x'</code> behaves like <code>'values'</code> until the number of selected options is greater than x; after that, it behaves like <code>'count'</code>.
+      <p>
+        <code>'values'</code> displays a list of the selected options (separated by <code>multipleSeparator</code>).
+        <br>
+        <code>'static'</code> simply displays the select element's title.
+        <br>
+        <code>'count > x'</code> behaves like <code>'values'</code> until the number of selected options is greater than x; after that, it displays the total number of selected options.
+        <br>
+        <code>'count'</code> is an alias for <code>'count > 1'</code>.
+      </p>
     </td>
   </tr>
   <tr>
@@ -315,6 +327,30 @@ Options can be passed via data attributes or JavaScript. For data attributes, ap
       <p>This is useful in cases where the window has areas that the dropdown menu should not cover - for instance a fixed header. When set to an integer, the same padding will be added to all sides. Alternatively, an array of integers can be used in the format <code>[top, right, bottom, left]</code>.</p>
     </td>
   </tr>
+  <tr>
+    <td>sanitize</td>
+    <td>boolean</td>
+    <td><code>true</code></td>
+    <td>
+      <p>Enable or disable the sanitization. If activated, <code>'data-content'</code> on individual options will be sanitized.</p>
+    </td>
+  </tr>
+  <tr>
+    <td>whiteList</td>
+    <td>object</td>
+    <td><a href="#sanitizer">Default value</a></td>
+    <td>
+      <p>Object which contains allowed attributes and tags</p>
+    </td>
+  </tr>
+  <tr>
+    <td>sanitizeFn</td>
+    <td>null | function</td>
+    <td><code>null</code></td>
+    <td>
+      <p>Here you can supply your own sanitize function. This can be useful if you prefer to use a dedicated library to perform sanitization.</p>
+    </td>
+  </tr>
   </tbody>
 </table>
 
@@ -374,7 +410,10 @@ hide.bs.select, hidden.bs.select, show.bs.select, and shown.bs.select all have a
     </tr>
     <tr>
       <td>changed.bs.select</td>
-      <td>This event fires after the select's value has been changed. It passes through event, clickedIndex, isSelected, previousValue. previousValue is the value of the select prior to being changed.</td>
+      <td>
+        <p>This event fires after the select's value has been changed. It passes through <code>event</code>, <code>clickedIndex</code>, <code>isSelected</code>, <code>previousValue</code>.</p>
+        <p><code>previousValue</code> is the value of the select prior to being changed. If the select's value has been changed either via the <code>.selectpicker('val')</code>, <code>.selectpicker('selectAll')</code>, or <code>.selectpicker('deselectAll')</code> methods, clickedIndex and isSelected will be <code>null</code>.</p>
+      </td>
     </tr>
   </tbody>
 </table>
@@ -384,3 +423,77 @@ $('#mySelect').on('changed.bs.select', function (e, clickedIndex, isSelected, pr
   // do something...
 });
 ```
+
+# Sanitizer
+
+---
+
+HTML added via the `data-content` attribute on individual options is sanitized using our built-in sanitizer.
+
+The default `whiteList` value is the following:
+
+```js
+var ARIA_ATTRIBUTE_PATTERN = /^aria-[\w-]*$/i;
+var DefaultWhitelist = {
+  // Global attributes allowed on any supplied element below.
+  '*': ['class', 'dir', 'id', 'lang', 'role', 'tabindex', 'style', ARIA_ATTRIBUTE_PATTERN],
+  a: ['target', 'href', 'title', 'rel'],
+  area: [],
+  b: [],
+  br: [],
+  col: [],
+  code: [],
+  div: [],
+  em: [],
+  hr: [],
+  h1: [],
+  h2: [],
+  h3: [],
+  h4: [],
+  h5: [],
+  h6: [],
+  i: [],
+  img: ['src', 'alt', 'title', 'width', 'height'],
+  li: [],
+  ol: [],
+  p: [],
+  pre: [],
+  s: [],
+  small: [],
+  span: [],
+  sub: [],
+  sup: [],
+  strong: [],
+  u: [],
+  ul: []
+}
+```
+
+If you want to add new values to this default `whiteList` you can do the following:
+
+```js
+var myDefaultWhiteList = $.fn.selectpicker.Constructor.DEFAULTS.whiteList;
+
+// To allow table elements
+myDefaultWhiteList.table = [];
+
+// To allow td elements and data-option attributes on td elements
+myDefaultWhiteList.td = ['data-option'];
+
+// You can push your custom regex to validate your attributes.
+// Be careful about your regular expressions being too lax
+var myCustomRegex = /^data-my-app-[\w-]+/;
+myDefaultWhiteList['*'].push(myCustomRegex);
+```
+
+If you want to bypass our sanitizer because you prefer to use a dedicated library, you should do the following:
+
+```js
+$('#yourSelect').selectpicker({
+  sanitizeFn: function (domNodes) {
+    return DOMPurify.sanitize(domNodes)
+  }
+});
+```
+
+For performance reasons, our built-in sanitizer accepts an array of DOM nodes as its first argument, rather than an HTML string. Keep that in mind if deciding to use your own `sanitizeFn`.

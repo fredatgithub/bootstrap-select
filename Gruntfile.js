@@ -46,47 +46,31 @@ module.exports = function (grunt) {
 
     concat: {
       options: {
-        stripBanners: true
+        stripBanners: true,
+        sourceMap: true
       },
       main: {
-        src: '<%= eslint.main.src %>',
-        dest: 'dist/js/<%= pkg.name %>.js'
+        src: 'js/<%= pkg.name %>.js',
+        dest: 'dist/js/<%= pkg.name %>.js',
+        options: {
+          banner: '<%= banner %>\n' + grunt.file.read('js/umd-intro.js'),
+          footer: grunt.file.read('js/umd-outro.js')
+        }
       },
       i18n: {
         expand: true,
         src: '<%= eslint.i18n.src %>',
-        dest: 'dist/'
-      }
-    },
-
-    umd: {
-      main: {
+        dest: 'dist/',
         options: {
-          deps: {
-            'default': ['jQuery'],
-            amd: ['jquery'],
-            cjs: ['jquery'],
-            global: ['jQuery']
-          }
-        },
-        src: '<%= concat.main.dest %>'
-      },
-      i18n: {
-        options: {
-          deps: {
-            'default': ['jQuery'],
-            amd: ['jquery'],
-            cjs: ['jquery'],
-            global: ['jQuery']
-          }
-        },
-        src: 'dist/<%= eslint.i18n.src %>',
-        dest: '.'
+          banner: '<%= banner %>\n' + grunt.file.read('js/umd-intro.js'),
+          footer: grunt.file.read('js/umd-outro.js')
+        }
       }
     },
 
     uglify: {
       options: {
+        banner: '<%= banner %>',
         output: {
           ascii_only: true
         },
@@ -99,7 +83,8 @@ module.exports = function (grunt) {
         dest: 'dist/js/<%= pkg.name %>.min.js',
         options: {
           sourceMap: true,
-          sourceMapName: 'dist/js/<%= pkg.name %>.js.map'
+          sourceMapIncludeSources: true,
+          sourceMapIn: 'dist/js/<%= pkg.name %>.js.map'
         }
       },
       i18n: {
@@ -129,16 +114,6 @@ module.exports = function (grunt) {
           banner: '<%= banner %>'
         },
         src: '<%= less.css.dest %>'
-      },
-      js: {
-        options: {
-          banner: '<%= banner %>'
-        },
-        src: [
-          '<%= concat.main.dest %>',
-          '<%= uglify.main.dest %>',
-          'dist/<%= eslint.i18n.src %>'
-        ]
       }
     },
 
@@ -212,7 +187,7 @@ module.exports = function (grunt) {
       },
       cdn: {
         options: {
-          prefix: 'ajax/libs/<%= pkg.name %>/'
+          prefix: 'npm/<%= pkg.name %>@'
         },
         src: [
           'README.md',
@@ -238,23 +213,14 @@ module.exports = function (grunt) {
       }
     },
 
-    autoprefixer: {
+    postcss: {
       options: {
-        browsers: [
-          'Android 2.3',
-          'Android >= 4',
-          'Chrome >= 20',
-          'Firefox >= 24', // Firefox 24 is the latest ESR
-          'Explorer >= 8',
-          'iOS >= 6',
-          'Opera >= 12',
-          'Safari >= 6'
+        map: true,
+        processors: [
+          require('autoprefixer')()
         ]
       },
       css: {
-        options: {
-          map: true
-        },
         src: '<%= less.css.dest %>'
       }
     },
@@ -304,20 +270,26 @@ module.exports = function (grunt) {
   // to update version number, use grunt version::x.y.z
 
   // CSS distribution
-  grunt.registerTask('build-css', ['clean:css', 'less', 'autoprefixer', 'usebanner:css', 'cssmin']);
+  grunt.registerTask('build-css', ['clean:css', 'less', 'postcss', 'usebanner:css', 'cssmin']);
 
   // JS distribution
-  grunt.registerTask('build-js', ['clean:js', 'eslint', 'concat', 'umd', 'uglify', 'usebanner:js']);
+  grunt.registerTask('build-js', ['clean:js', 'eslint', 'concat', 'uglify']);
 
   // Copy dist to docs
-  grunt.registerTask('docs', ['clean:docs', 'copy:docs']);
+  grunt.registerTask('copy-docs', ['clean:docs', 'copy:docs']);
+
+  // Build CSS & JS
+  grunt.registerTask('build', ['build-css', 'build-js']);
 
   // Development watch
-  grunt.registerTask('dev-watch', ['build-css', 'build-js', 'watch']);
+  grunt.registerTask('dev-watch', ['build', 'watch']);
 
   // Full distribution
-  grunt.registerTask('dist', ['build-css', 'build-js', 'compress']);
+  grunt.registerTask('dist', ['build', 'compress', 'copy-docs']);
 
   // Default task.
-  grunt.registerTask('default', ['build-css', 'build-js']);
+  grunt.registerTask('default', 'build');
+
+  // Linting
+  grunt.registerTask('lint', 'eslint');
 };

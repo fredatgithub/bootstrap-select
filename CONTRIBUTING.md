@@ -82,6 +82,7 @@ the authors (and/or leaders) of the project a non-exclusive license to
 re-distribute your code under the current license and possibly re-license the
 code as deemed necessary.
 
+* IMPORTANT: base your PR on the `dev` branch and target the `dev` branch
 * To instantiate a context or use it, use the variable **that** instead of
   **_this**.
 * Please check to make sure that there aren't existing pull requests attempting
@@ -105,8 +106,16 @@ This means that you must setup a local development environment:
    - `grunt`: clean the distribution files and re-build them
    - `grunt dist`: build the distribution files
    - `grunt clean`: clean the distribution files
-   - `grunt dist-css`: build the css distribution files
-   - `grunt dist-js`: build the javascript distribution files
-   - `grunt watch`: watch for changes in the source files and build the
+   - `grunt build-css`: build the css distribution files
+   - `grunt build-js`: build the javascript distribution files
+   - `grunt dev-watch`: watch for changes in the source files and build the
      distribution files as needed
 
+## Running documentation locally
+
+1. If necessary, [install MkDocs](https://www.mkdocs.org/#installation).
+2. Install [mkdocs-bootstrap](https://mkdocs.github.io/mkdocs-bootstrap/) using `pip install mkdocs-bootstrap`.
+3. From the `/bootstrap-select/docs` directory, run `mkdocs serve` in the command line.
+4. Open `http://127.0.0.1:8000/` in your browser, and voilà.
+
+Learn more about using MkDocs by reading its [documentation](https://www.mkdocs.org/).
